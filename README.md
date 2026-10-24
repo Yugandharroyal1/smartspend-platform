@@ -1,2 +1,1 @@
-# smartspend-platform
-Real time grocery price comparison and group split optimizer
+# SmartSpend - Real-Time Grocery Price Comparison. Spring Boot + MySQL + React. Compare prices across Walmart, Target, Costco, Kroger and Publix. Built by Yugandhar Ande (USF CS).
