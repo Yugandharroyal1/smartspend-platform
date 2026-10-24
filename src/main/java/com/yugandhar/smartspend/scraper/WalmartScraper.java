@@ -18,7 +18,7 @@ public class WalmartScraper {
     public void scrapeWalmartPrices() {
         try {
             Store walmart = storeRepo.findByName("Walmart")
-                .orElse(storeRepo.save(new Store(null,"Walmart","Superstore","walmart.com")));
+                .orElseGet(() -> storeRepo.save(new Store(null,"Walmart","Superstore","walmart.com")));
             Document doc = Jsoup.connect("https://www.walmart.com/browse/food/976759")
                 .userAgent("Mozilla/5.0").timeout(10000).get();
             Elements items = doc.select("[data-item-id]");
@@ -30,7 +30,7 @@ public class WalmartScraper {
                     double price = Double.parseDouble(priceText);
                     Product product = productRepo.findByNameContainingIgnoreCase(name)
                         .stream().findFirst()
-                        .orElse(productRepo.save(new Product(null,name,"Walmart","Grocery","each")));
+                        .orElseGet(() -> productRepo.save(new Product(null,name,"Walmart","Grocery","each")));
                     priceRepo.save(new Price(null,product,walmart,price,null,false,LocalDateTime.now()));
                 }
             }

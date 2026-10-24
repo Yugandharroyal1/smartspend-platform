@@ -40,10 +40,12 @@ public class KrogerApiService {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            Store kroger = storeRepo.findByName("Kroger").orElse(storeRepo.save(new Store(null,"Kroger","Supermarket","kroger.com")));
+            Store kroger = storeRepo.findByName("Kroger").orElseGet(() -> storeRepo.save(new Store(null,"Kroger","Supermarket","kroger.com")));
+            ResponseEntity<Map> loc = rest.exchange(baseUrl + "/locations?filter.zipCode.near=45202&filter.limit=1", HttpMethod.GET, entity, Map.class);
+            String locationId = (String) ((Map) ((List) loc.getBody().get("data")).get(0)).get("locationId");
             String[] terms = {"eggs","milk","bread","chicken","beer","chips","soda","rice","butter","water"};
             for (String term : terms) {
-                String url = baseUrl + "/products?filter.term=" + term + "&filter.limit=10";
+                String url = baseUrl + "/products?filter.term=" + term + "&filter.limit=10&filter.locationId=" + locationId;
                 ResponseEntity<Map> response = rest.exchange(url, HttpMethod.GET, entity, Map.class);
                 List<Map> items = (List<Map>) response.getBody().get("data");
                 if (items != null) {
@@ -55,7 +57,7 @@ public class KrogerApiService {
                             if (priceInfo != null) {
                                 Double regular = priceInfo.get("regular") != null ? Double.valueOf(priceInfo.get("regular").toString()) : null;
                                 Double promo = priceInfo.get("promo") != null ? Double.valueOf(priceInfo.get("promo").toString()) : null;
-                                Product product = productRepo.findByNameContainingIgnoreCase(name).stream().findFirst().orElse(productRepo.save(new Product(null,name,"Kroger",term,"each")));
+                                Product product = productRepo.findByNameContainingIgnoreCase(name).stream().findFirst().orElseGet(() -> productRepo.save(new Product(null,name,"Kroger",term,"each")));
                                 priceRepo.save(new Price(null,product,kroger,regular,promo,promo!=null&&promo>0,LocalDateTime.now()));
                             }
                         }
@@ -64,7 +66,7 @@ public class KrogerApiService {
             }
             System.out.println("Kroger products fetched!");
         } catch (Exception e) {
-            System.out.println("Kroger error: " + e.getMessage());
+            System.out.println("Kroger error: " + e);
         }
     }
 }
